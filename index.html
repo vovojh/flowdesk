@@ -1,0 +1,152 @@
+<!doctype html5>
+<html>
+	<head>
+		<link rel="icon" href="img/favicon.ico">
+		<title>Flowdesk</title>
+		<style>
+			body {
+				margin : 0px;
+			}			
+			#info_bar {
+				display : -webkit-flex;
+				display : flex;
+				background-color : #ff8533;
+				position : fixed;	
+				top : 0px;
+				left : 0px;
+				height : 40px;
+				width : 100%;			
+				border-bottom : 1px solid #cc5200;
+				-webkit-flex-flow : row nowrap;
+				flex-flow : row nowrap;
+				-webkit-align-items : center;
+				align-items : center;
+				-webkit-justify-content : center;
+				justify-content : center;
+				z-index : 4;
+			}					
+			#logo {
+				display : inline-block;
+				width : 35px;
+				height : 35px;
+				background-image : url('img/logo.png');
+				background-size : cover;
+				background-position : 0 2px;
+			}									
+			#tag_area {
+				position : relative;
+				padding-left : 30px;
+				width : 500px;
+				height : 35px;				
+			}			
+			#magnifier {
+				position : absolute;
+				left : 38px; 
+				top : 30%;
+			}
+			#tags {
+				margin-top : 2px;
+				padding-left : 25px;
+				height : 25px;
+			}				
+			#login {
+				margin-left : 20px;
+				height : 25px;
+				line-height : 25px;
+				vertical-align : middle;
+				color : white;
+			}	
+			#signup {
+				margin-left : 20px;
+				height : 25px;
+				line-height : 25px;
+				vertical-align : middle;
+				color : white;
+			}				
+			#main_area {
+				position : relative;
+				margin-top : 40px;
+				width : 100%;
+				min-width : 1200px;
+				height : 800px;		
+				text-align : center;
+			}
+			#main_container {
+				position : relative;
+				margin : 0 auto;
+				width : 1200px;
+				height : 100%;						
+			}			
+			#left_col {
+				display : inline-block;
+				position : relative;
+				width : 200px;
+				height : 100%;
+				background-color : blue;						
+			}			
+			#main_col {
+				display : inline-block;
+				position : relative;
+				margin : 10px;
+				width : 700px;
+				height : 100%;
+				background-color : green;					
+			}			
+			#right_col {
+				display : inline-block;
+				position : relative;
+				width : 200px;
+				height : 100%;
+				background-color : yellow;					
+			}
+			#footer {
+				position : relative;
+				width : 100%;
+				height : 40px;
+				background-color : #ffc299;
+				border-top : 1px solid #ff944d;
+			}					
+			#copyright {
+				position : relative;
+				left : 50px;
+				height : 40px;
+				line-height : 40px;
+				vertical-align : middle;				
+			}				
+		</style>
+		<script>
+			document.onload = function(){
+				// initialization code comes first
+				//
+						
+			}
+		</script>
+	</head>
+	<body>
+		<div id="info_bar">
+			<a href="index.html">
+				<span id="logo"></span>
+			</a>
+			<form id="tag_area" action="index.html" method="get">
+				<svg id="magnifier" width="15" height="15">
+					<path fill-rule="evenodd"  d="M12.864 11.32h-.813l-.288-.277A6.66 6.66 0 0 0 13.38 6.69a6.69 6.69 0 1 0-6.69 6.69 6.66 6.66 0 0 0 4.354-1.617l.278.288v.813L16.467 18 18 16.467l-5.136-5.146zm-6.174 0a4.625 4.625 0 0 1-4.632-4.63A4.625 4.625 0 0 1 6.69 2.058a4.625 4.625 0 0 1 4.63 4.632 4.625 4.625 0 0 1-4.63 4.63z">
+					</path>
+				</svg>
+				<input id="tags" maxlength="50" placeholder="Search Tags..." spellcheck="false" />
+			</form>
+			<div id="login">Log In</div>
+			<div id="signup">Sign Up</div>
+		</div>
+		<div id="main_area">
+			<div id="main_container">
+				<div id="left_col"></div>
+				<div id="main_col"></div>
+				<div id="right_col"></div>
+			</div>
+		</div>
+		<div id="ctrl_bar"></div>
+		<div id="footer">
+			<div id="copyright">Copyright © PENNOTE. All rights reserved.</div>
+		</div>
+	</body>
+</html>
