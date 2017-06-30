@@ -1,152 +1,485 @@
-<!doctype html5>
+<!DOCTYPE html>
 <html>
 	<head>
-		<link rel="icon" href="img/favicon.ico">
 		<title>Flowdesk</title>
-		<style>
-			body {
-				margin : 0px;
-			}			
-			#info_bar {
-				display : -webkit-flex;
-				display : flex;
-				background-color : #ff8533;
-				position : fixed;	
-				top : 0px;
-				left : 0px;
-				height : 40px;
-				width : 100%;			
-				border-bottom : 1px solid #cc5200;
-				-webkit-flex-flow : row nowrap;
-				flex-flow : row nowrap;
-				-webkit-align-items : center;
-				align-items : center;
-				-webkit-justify-content : center;
-				justify-content : center;
-				z-index : 4;
-			}					
-			#logo {
-				display : inline-block;
-				width : 35px;
-				height : 35px;
-				background-image : url('img/logo.png');
-				background-size : cover;
-				background-position : 0 2px;
-			}									
-			#tag_area {
-				position : relative;
-				padding-left : 30px;
-				width : 500px;
-				height : 35px;				
-			}			
-			#magnifier {
-				position : absolute;
-				left : 38px; 
-				top : 30%;
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+		<style type="text/css">
+			* { padding: 0; margin: 0; border: 0; } 
+			body { background-color: #eaebed; }
+			#maintitle_wrapper {
+				position : fixed;
+				/* display : inline-block; */
+				top : 50px;
+				left : 50px;
+				height : 160px;
+				border-left : 20px solid #db021f;
 			}
-			#tags {
-				margin-top : 2px;
-				padding-left : 25px;
-				height : 25px;
-			}				
-			#login {
-				margin-left : 20px;
-				height : 25px;
-				line-height : 25px;
-				vertical-align : middle;
-				color : white;
-			}	
-			#signup {
-				margin-left : 20px;
-				height : 25px;
-				line-height : 25px;
-				vertical-align : middle;
-				color : white;
-			}				
-			#main_area {
+			#maintitle_1 {
+				position : fixed;
+				top : 40px;
+				left : 80px;
+				font-family : "Arial Black";
+				color : black;
+				font-size : 65px;
+			}
+			#maintitle_2 {
+				position : fixed;
+				top : 125px;
+				left : 80px;
+				font-family : "Arial Black";
+				color : black;
+				font-size : 65px;
+			}
+			#subtitle_wrapper {
+				position : fixed;
+				/* display : inline-block; */
+				top : 230px;
+				left : 50px;
+				height : 50px;
+				border-left : 20px solid #1700ba; /* #0669d3; */
+			}
+			#subtitle {
+				position : fixed;
+				top : 234px;
+				left : 85px;
+				font-family : "Arial Black";
+				color : black;
+				font-size : 25px;  
+			}
+			.row {
 				position : relative;
-				margin-top : 40px;
+				margin-top : 30px;
+				margin-bottom : 30px;
+				height : 400px; 	/* dynamically scaled as the post content is added */
 				width : 100%;
-				min-width : 1200px;
-				height : 800px;		
-				text-align : center;
+				min-width : 400px; 	/* minimum width of window */
 			}
-			#main_container {
+			.post_placeholder {
 				position : relative;
 				margin : 0 auto;
-				width : 1200px;
-				height : 100%;						
-			}			
-			#left_col {
-				display : inline-block;
-				position : relative;
-				width : 200px;
-				height : 100%;
-				background-color : blue;						
-			}			
-			#main_col {
-				display : inline-block;
-				position : relative;
-				margin : 10px;
-				width : 700px;
-				height : 100%;
-				background-color : green;					
-			}			
-			#right_col {
-				display : inline-block;
-				position : relative;
-				width : 200px;
-				height : 100%;
-				background-color : yellow;					
+				height : 100%;			/* fixed to "row" height */
+				width : 400px;						
 			}
-			#footer {
+			.post_wrapper {
+				position :relative;
+                background-color : white;
+  				margin : 0 auto;
+  				width : 90%;
+				height : 90%;
+				border : 1px solid #888;
+				box-shadow : none;
+			}
+			.post_wrapper:hover, .post_wrapper:active {
+			    -moz-box-shadow : 0 0 8px #8ce6ff;
+                -webkit-box-shadow : 0 0 8px #8ce6ff;
+				box-shadow : 0 0 8px #8ce6ff;
+			}
+			.post_header {
 				position : relative;
-				width : 100%;
-				height : 40px;
-				background-color : #ffc299;
-				border-top : 1px solid #ff944d;
-			}					
-			#copyright {
+				float : left;
+				overflow : hidden;
+                background-color : white;
+                margin : 0 auto;
+                width : 100%;
+                height : 15%;
+			}
+			.post_body {
 				position : relative;
-				left : 50px;
-				height : 40px;
-				line-height : 40px;
-				vertical-align : middle;				
-			}				
+				/* float : left; */
+                background-color : white;
+                margin : 0 auto;
+                width : 90%;
+                height : 70%;
+                border: none;
+			    overflow: auto;
+			    outline: none;
+			    -webkit-box-shadow: none;
+			    -moz-box-shadow: none;
+			    box-shadow: none;
+			}
+			.post_tail {
+				position : relative;
+				float : left;
+                background-color : white;
+                margin : 0 auto;
+                width : 100%;
+                height : 15%;
+			}
+			#newPostBtn {
+				position : fixed;
+				bottom : 30px;
+				right : 110px;
+				width : 70px;
+				height : 70px;
+				border-radius : 50%; 
+				background-image : url("img/post-icon_resized.png");  
+				transition : all .2s ease-in-out;
+				z-index : 5; 
+			}
+			#newPostBtn:hover {
+				transform : scale(1.1);
+			}
+			#newPostBtn:active {
+				transform : scale(0.8);
+			}
+			#syncBtn {
+				position : fixed;
+				bottom : 30px;
+				right : 20px;
+				width : 70px;
+				height : 70px;
+				border-radius : 50%; 
+				background-image : url("img/sync-icon_resized.png"); 
+				transition : all .2s ease-in-out; 
+				z-index : 5; 
+			}
+			#syncBtn:hover {
+				transform : scale(1.2);
+			}
+			#syncBtn:active {
+				transform : scale(0.8);
+			}
+			#searchBtn {
+				position : fixed;
+				bottom : 30px;
+				right : 200px;
+				width : 70px;
+				height : 70px;
+				border-radius : 50%; 
+				background-image : url("img/search-icon.png"); 
+				transition : all .2s ease-in-out; 
+				z-index : 5; 
+			}
+			#searchBtn:hover {
+				transform : scale(1.1);
+			}
+			#searchBtn:active {
+				transform : scale(0.8);
+			}
+			#resizeHorBtn {
+				position : fixed;
+				bottom : 30px;
+				right : 290px;
+				width : 70px;
+				height : 70px;
+				border-radius : 50%; 
+				background-image : url("img/resize_H.png");  
+				transition : all .2s ease-in-out;
+				z-index : 5; 
+			}
+			#resizeHorBtn:hover {
+				transform : scale(1.1);
+			}
+			#resizeHorBtn:active {
+				transform : scale(0.8);
+			}
+			#resizeVerBtn {
+				position : fixed;
+				bottom : 30px;
+				right : 380px;
+				width : 70px;
+				height : 70px;
+				border-radius : 50%; 
+				background-image : url("img/resize_V.png");  
+				transition : all .2s ease-in-out;
+				z-index : 5; 
+			}
+			#resizeVerBtn:hover {
+				transform : scale(1.1);
+			}
+			#resizeVerBtn:active {
+				transform : scale(0.8);
+			}
+			.BtnLabel {
+				position : fixed;
+				bottom : 105px;
+				font-family : "consolas";
+				/* font-weight : bold; */
+				font-size : 14px;
+				color : blue;   
+			}
+			.Tag {
+				position : relative;
+				overflow : hidden;
+				top : 5px;
+				left : 5px;
+				margin : 5px;
+				padding-left : 5px;
+				padding-right : 5px;
+				display : block;
+				float : left;
+				vertical-align: middle;
+    			text-align: center;
+				background-color : #96beff;
+				color : white;
+				font-weight : bold; 
+				font-family : "Arial Black";
+				font-size : 20px;
+				height : 33px;
+				/* width : 70px; */
+				border : 2px solid #6697e8; 
+			}
+			/* Tooltip container */
+			.tooltip {
+			    /* position: relative;
+			    display: inline-block;
+			    border-bottom: 1px dotted black; */ /* If you want dots under the hoverable text */
+			}
+
+			/* Tooltip text */
+			.tooltip .tooltiptext {
+			    visibility: hidden;
+			    width: 80px;
+			    background-color: #555;
+			    color: #fff;
+			    text-align: center;
+			    padding: 5px 0;
+			    border-radius: 6px;
+
+			    /* Position the tooltip text */
+			    position: absolute;
+			    z-index: 1;
+			    bottom: 125%;
+			    left: 50%;
+			    margin-left: -40px;
+
+			    /* Fade in tooltip */
+			    opacity: 0;
+			    transition: opacity 1s;
+			}
+
+			/* Tooltip arrow */
+			.tooltip .tooltiptext::after {
+			    content: "";
+			    position: absolute;
+			    top: 100%;
+			    left: 50%;
+			    margin-left: -5px;
+			    border-width: 5px;
+			    border-style: solid;
+			    border-color: #555 transparent transparent transparent;
+			}
+
+			/* Show the tooltip text when you mouse over the tooltip container */
+			.tooltip:hover .tooltiptext {
+			    visibility: visible;
+			    opacity: 1;
+			}
 		</style>
-		<script>
-			document.onload = function(){
-				// initialization code comes first
-				//
-						
+		<script type="text/javascript">
+			var board = []; // Posts are stored
+			var sharpPressed = false; // To detect usage of Tag Grammar
+			var preTagContentsLength = 0; // To revert the post content back
+			// Variable post size on a scale from 0 to 3
+			var horSize = 0;
+			var verSize = 0;
+			window.onkeypress = function(e){
+				var code = e.keyCode? e.keyCode : e.which;
+				console.log("keypressed : " + code);
+			}
+			window.onkeydown = function(e){
+				var code = e.keyCode? e.keyCode : e.which;
+				console.log(code);
+				if(code == 222){	// When " is typed
+					var row = document.createElement('div');
+					var post_placeholder = document.createElement('div');
+					var post_wrapper = document.createElement('div');
+					var post_header = document.createElement('div');
+					var post_body = document.createElement('div');
+					var post_tail = document.createElement('div');
+					row.className = "row";
+					post_placeholder.className = "post_placeholder";
+					post_wrapper.className = "post_wrapper";
+					post_header.className = "post_header"; 
+					post_body.className = "post_body";
+					post_tail.className = "post_tail";
+					post_body.contentEditable = true;
+					// Size synchronization
+					post_placeholder.style.width = 400 + 200 * horSize + "px";
+					row.style.height = 400 + 200 * verSize + "px";
+					document.body.appendChild(row);
+					row.appendChild(post_placeholder);
+					post_placeholder.appendChild(post_wrapper);
+					post_wrapper.appendChild(post_header);
+					post_wrapper.appendChild(post_body);
+					post_wrapper.appendChild(post_tail);
+					// Paste enabled inside content-editable div
+					post_body.onpaste = function(e){
+						console.log("paste event fired!");
+						this.focus();
+					    //e.preventDefault();
+					    var text = (e.originalEvent || e).clipboardData.getData('text/plain');
+					    window.document.execCommand('insertText', false, text);			
+					};
+					// $('.post_body[contenteditable]').on('paste',function(e) {
+					// 	console.log("paste event fired!");
+					// 	this.focus();
+					//     e.preventDefault();
+					//     var text = (e.originalEvent || e).clipboardData.getData('text/html');
+					//     window.document.execCommand('insertText', false, text);
+					// });
+				} else if(code == 51) {	// when "#" key is pressed
+					if(sharpPressed == false){
+						sharpPressed = true;
+						//preTagContentsLength = document.activeElement.innerHTML.length;
+						//console.log("preTagContentsLength : " + document.activeElement.innerHTML.length);
+					} else {
+
+					}
+				} else if(code == 32 && sharpPressed == true) { // when "white space" key is pressed
+					console.log("Tag creation");
+					sharpPressed = false;
+					var tag = document.createElement('div');
+					var textarea = document.activeElement;
+					var focusedPost = textarea.parentElement.firstChild;
+					tag.className = "Tag";
+					console.log("innerHTML : " + textarea.innerHTML);
+					console.log("innerText : " + textarea.innerText);
+					var regexTag = /\#[ㄱ-ㅎ|ㅏ-ㅣ|가-힣|a-z|A-Z|0-9]+/.exec(textarea.innerText);
+					tag.innerHTML = regexTag;
+					textarea.innerHTML = textarea.innerText.replace(regexTag, "");
+					textarea.blur();
+					textarea.focus();
+					/*   innerText?
+					tag.innerHTML = document.activeElement.innerHTML.substring(document.activeElement.innerHTML.length - preTagContentsLength, document.activeElement.innerHTML.length);
+					document.activeElement.innerHTML = document.activeElement.innerHTML.substring(0, preTagContentsLength);
+					*/
+					focusedPost.appendChild(tag);
+				}
+			}
+			window.onload = function(){
+				console.log("onload function launched")
+				
+				var newPostBtn = document.createElement('div');
+				var syncBtn = document.createElement('div');
+				var searchBtn = document.createElement('div');
+				var resizeHorBtn = document.createElement('div');
+				var resizeVerBtn = document.createElement('div');
+				var newPostBtnLabel = document.createElement('span');
+				var syncBtnLabel = document.createElement('span');
+				var searchBtnLabel = document.createElement('span');
+				var resizeHorBtnLabel = document.createElement('span');
+				var resizeVerBtnLabel = document.createElement('span');
+				newPostBtn.id = "newPostBtn";
+				newPostBtn.className = "tooltip";
+				newPostBtn.onclick = function(){
+					var row = document.createElement('div');
+					var post_placeholder = document.createElement('div');
+					var post_wrapper = document.createElement('div');
+					var post_header = document.createElement('div');
+					var post_body = document.createElement('div');
+					var post_tail = document.createElement('div');
+					row.className = "row";
+					post_placeholder.className = "post_placeholder";
+					post_wrapper.className = "post_wrapper";
+					post_header.className = "post_header"; 
+					post_body.className = "post_body";
+					post_tail.className = "post_tail";
+					post_body.contentEditable = true;
+					// Size synchronization
+					post_placeholder.style.width = 400 + 200 * horSize + "px";
+					row.style.height = 400 + 200 * verSize + "px";
+					document.body.appendChild(row);
+					row.appendChild(post_placeholder);
+					post_placeholder.appendChild(post_wrapper);
+					post_wrapper.appendChild(post_header);
+					post_wrapper.appendChild(post_body);
+					post_wrapper.appendChild(post_tail);
+				}
+				syncBtn.id = "syncBtn";
+				syncBtn.className = "tooltip";
+				syncBtn.onclick = function(){
+					// AJAX Request to send data to Memo DB
+					// if already synced, do nothing
+					if(false){
+						return;
+					}
+					var unSyncedPosts = document.getElementsByClassName("post_body");
+					console.log(unSyncedPosts);
+					console.log(unSyncedPosts[0].innerHTML);
+					var text = "dataToSend:" + unSyncedPosts[0].innerHTML;
+					for(var i=0; i<unSyncedPosts.length; i++){
+						text = text + unSyncedPosts[i].innerHTML;	
+					}		
+					console.log(text);			
+					var xhttp = new XMLHttpRequest();
+					xhttp.onreadystatechange = function(){
+						if(this.readyState == 4 && this.status == 200){
+							console.log("Sync request accepted successfully!");
+						}						
+					};
+					xhttp.open("POST", "", true);
+					xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+					xhttp.send("contents=" + text);
+					console.log("AJAX Working");
+				}
+				searchBtn.id = "searchBtn";
+				searchBtn.className = "tooltip";
+				searchBtn.onclick = function(){
+				}
+				resizeHorBtn.id = "resizeHorBtn";
+				resizeHorBtn.className = "tooltip";
+				resizeHorBtn.onclick = function(){
+					var x = document.getElementsByClassName("post_placeholder");
+					var i;
+					var tmp;
+					horSize = horSize + 1;
+					if(horSize > 3){
+						horSize = 0;
+					}
+					for (i = 0; i < x.length; i++) {
+					    x[i].style.width = 400 + 200 * horSize + "px";
+					}
+				}
+				resizeVerBtn.id = "resizeVerBtn";
+				resizeVerBtn.className = "tooltip";
+				resizeVerBtn.onclick = function(){
+					var x = document.getElementsByClassName("row");
+					var i;
+					var tmp;
+					verSize = verSize + 1;
+					if(verSize > 3){
+						verSize = 0;
+					}
+					for (i = 0; i < x.length; i++) {
+					    x[i].style.height = 400 + 200 * verSize + "px";
+					}
+				}
+				newPostBtnLabel.className = "tooltiptext";
+				newPostBtnLabel.innerHTML = "Create" + "<br />" + "New Post";
+				//newPostBtnLabel.style.right = "112px";
+				syncBtnLabel.className = "tooltiptext";				
+				syncBtnLabel.innerHTML = "Sync";
+				searchBtnLabel.className = "tooltiptext";				
+				searchBtnLabel.innerHTML = "Search" + "<br />" +"by Tags";
+				resizeHorBtnLabel.className = "tooltiptext";
+				resizeHorBtnLabel.innerHTML = "Resize " + "<br />" + " horizontally ";
+				resizeVerBtnLabel.className = "tooltiptext";
+				resizeVerBtnLabel.innerHTML = "Resize " + "<br />" + " vetically ";
+				//syncBtnLabel.style.right = "22px";
+				document.body.appendChild(newPostBtn);
+				document.body.appendChild(syncBtn);
+				document.body.appendChild(searchBtn);
+				document.body.appendChild(resizeHorBtn);
+				document.body.appendChild(resizeVerBtn);
+				newPostBtn.appendChild(newPostBtnLabel);
+				syncBtn.appendChild(syncBtnLabel);
+				searchBtn.appendChild(searchBtnLabel);
+				resizeHorBtn.appendChild(resizeHorBtnLabel);
+				resizeVerBtn.appendChild(resizeVerBtnLabel);
 			}
 		</script>
 	</head>
 	<body>
-		<div id="info_bar">
-			<a href="index.html">
-				<span id="logo"></span>
-			</a>
-			<form id="tag_area" action="index.html" method="get">
-				<svg id="magnifier" width="15" height="15">
-					<path fill-rule="evenodd"  d="M12.864 11.32h-.813l-.288-.277A6.66 6.66 0 0 0 13.38 6.69a6.69 6.69 0 1 0-6.69 6.69 6.66 6.66 0 0 0 4.354-1.617l.278.288v.813L16.467 18 18 16.467l-5.136-5.146zm-6.174 0a4.625 4.625 0 0 1-4.632-4.63A4.625 4.625 0 0 1 6.69 2.058a4.625 4.625 0 0 1 4.63 4.632 4.625 4.625 0 0 1-4.63 4.63z">
-					</path>
-				</svg>
-				<input id="tags" maxlength="50" placeholder="Search Tags..." spellcheck="false" />
-			</form>
-			<div id="login">Log In</div>
-			<div id="signup">Sign Up</div>
+		<div id="maintitle_wrapper">
+			<div id="maintitle_1">Flowdesk</div>
+			<div id="maintitle_2">Post Stack</div>
 		</div>
-		<div id="main_area">
-			<div id="main_container">
-				<div id="left_col"></div>
-				<div id="main_col"></div>
-				<div id="right_col"></div>
-			</div>
-		</div>
-		<div id="ctrl_bar"></div>
-		<div id="footer">
-			<div id="copyright">Copyright © PENNOTE. All rights reserved.</div>
+		<div id="subtitle_wrapper">
+			<div id="subtitle">Logged in as "JERRY AN"</div>
 		</div>
 	</body>
 </html>
+
+
