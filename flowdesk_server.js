@@ -6,9 +6,9 @@ var http = require('http');
 var fs = require('fs');
 var url = require('url');
 
-var MongoClient = require('mongodb').MongoClient;
-var assert = require('assert');
-var mongodbUrl = 'mongodb://localhost:27017/flowdesk';
+//var MongoClient = require('mongodb').MongoClient;
+//var assert = require('assert');
+//var mongodbUrl = 'mongodb://localhost:27017/flowdesk';
 
 var server = http.createServer(function(request, response){
 	var pathname = url.parse(request.url).pathname;
