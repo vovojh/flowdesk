@@ -542,6 +542,7 @@
 					if(false){
 						return;
 					}
+					// sync posts in the view of the inbox only
 					var unSyncedPosts = document.getElementsByClassName("post_body");
 					console.log(unSyncedPosts);
 					console.log(unSyncedPosts[0].innerHTML);
@@ -646,7 +647,7 @@
 				if(code == 222){	// When " is typed
 					createPost();
 				} else if(code == 51) {	// when "#" key is pressed
-					if(sharpPressed == false){
+					if(sharpPressed == false) {
 						sharpPressed = true;
 						//preTagContentsLength = document.activeElement.innerHTML.length;
 						//console.log("preTagContentsLength : " + document.activeElement.innerHTML.length);
@@ -657,6 +658,9 @@
 					sharpPressed = false;
 					createTag(inputState);
 					refreshInboxView(inputState);
+				} else if ((code == 27 || code == 13) && inputState === InputState.SEARCH) {
+					var searchBarContainer = document.getElementById('searchBarContainer');
+					document.body.removeChild(searchBarContainer);
 				}
 			}
 			window.onkeydown = keyManager;
