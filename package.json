@@ -1,0 +1,36 @@
+{
+  "name": "flowdesk",
+  "version": "1.0.0",
+  "description": "The project named \"**flowdesk**\" is to build the customizable memo web application. A variety of ideas or any kind of contents can be simply posted and reviewed with the help of automatic classification by tag information. Users can manage and organize accumulated memos in a sophisticated way by manipulating tag information only and agile collaboration can be supported with an intuitive and easy-to-learn UI.",
+  "main": "index.js",
+  "dependencies": {
+    "colors": "^1.1.2",
+    "express": "^4.15.4",
+    "mongodb": "^2.2.31"
+  },
+  "devDependencies": {
+    "nodemon": "^1.12.0"
+  },
+  "scripts": {
+    "test": "test",
+    "start": "start"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vovojh/flowdesk.git"
+  },
+  "keywords": [
+    "post",
+    "collaboration",
+    "cowork",
+    "simple",
+    "quick",
+    "intuitive"
+  ],
+  "author": "jerryan",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/vovojh/flowdesk/issues"
+  },
+  "homepage": "https://github.com/vovojh/flowdesk#readme"
+}

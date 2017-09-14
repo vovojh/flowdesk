@@ -499,17 +499,18 @@
 				var textarea_innerHTML = textarea.innerHTML;
 				var focusedPost = textarea.parentElement.firstChild;
 				var regexTag = /\#[ㄱ-ㅎ|ㅏ-ㅣ|가-힣|a-z|A-Z|0-9]+/.exec(textarea_innerHTML);
+				var regexTagString = regexTag.toString();
 				tag.innerHTML = regexTag;
-				textarea.innerHTML = textarea_innerHTML.replace(regexTag, "");
+				textarea.innerHTML = textarea_innerHTML.replace(regexTagString, "");
 				// for what?
 				textarea.blur();
 				textarea.focus();
 				if(inputState === InputState.POST) {
 					tag.className = "Tag";
-					post.tags.push(regexTag);
+					post.tags.push(regexTagString);
 				} else {
 					tag.className = "SearchTag";
-					tagsForSearch.push(regexTag);
+					tagsForSearch.push(regexTagString);
 				}				
 				if(post !== undefined) {
 					console.log("tags in the post : ");
@@ -546,20 +547,25 @@
 					var unSyncedPosts = document.getElementsByClassName("post_body");
 					console.log(unSyncedPosts);
 					console.log(unSyncedPosts[0].innerHTML);
-					var text = "dataToSend:" + unSyncedPosts[0].innerHTML;
-					for(var i=0; i<unSyncedPosts.length; i++){
-						text = text + unSyncedPosts[i].innerHTML;	
-					}		
-					console.log(text);			
+					var dataToSend = {posts:[]};
+					var i, j;
+					for(i=0; i<unSyncedPosts.length; i++){
+						for(j=0; j<inbox.nPosts; j++){
+							if(unSyncedPosts[i].id == inbox.posts[j].id.toString()) 
+								dataToSend.posts.push(inbox.posts[j]);
+						}	
+					}			
+					console.log("The data to be sent : ");
+					console.dir(dataToSend);
 					var xhttp = new XMLHttpRequest();
 					xhttp.onreadystatechange = function(){
 						if(this.readyState == 4 && this.status == 200){
 							console.log("Sync request accepted successfully!");
 						}						
 					};
-					xhttp.open("POST", "", true);
-					xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-					xhttp.send("contents=" + text);
+					xhttp.open("POST", "http://13.58.29.135:8081/addposts", true);
+					xhttp.setRequestHeader("Content-type", "application/json");
+					xhttp.send(JSON.stringify(dataToSend));
 					console.log("AJAX Working");
 				}
 				searchBtn.id = "searchBtn";
@@ -679,6 +685,9 @@
 		</div>
 	</body>
 </html>
+
+
+
 
 
 
