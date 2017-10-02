@@ -10,8 +10,6 @@ const url = require('url')
 const colors = require('colors')
 const events = require('events')
 
-console.log('-----')
-
 var updateEachPost = new events.EventEmitter()
 updateEachPost.on('nextUpdate', function(db, idx, modifiedPosts, resp){
 	console.dir(db)
@@ -45,9 +43,6 @@ updateEachPost.on('nextUpdate', function(db, idx, modifiedPosts, resp){
 })
 const mongodbUrl = 'mongodb://localhost:27017/flowdesk'
 const app = express()
-
-
-console.log('-----')
 
 app.use(bodyParser.json({ type: 'application/json' }))
 
@@ -125,9 +120,6 @@ app.post('/syncposts', function(req, res){
 		}
 	})
 })
-
-
-console.log('-----')
 
 app.listen(8081, function () {
   console.log('[LOG] Flowdesk server listening on port 8081'.yellow)
