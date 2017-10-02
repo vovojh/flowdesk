@@ -219,7 +219,14 @@
 				font-size : 20px;
 				height : 33px;
 				/* width : 70px; */
-				border : 2px solid #6697e8; 
+				border : 2px solid #6697e8;
+				transition : all .1s ease-in-out; 
+			}
+			.Tag:hover {
+				transform : scale(1.1);
+			}
+			.Tag:active {
+				transform : scale(0.9);
 			}
 			.SearchTag {
 				position : relative;
@@ -477,6 +484,42 @@
 						var tag = document.createElement('div');
 						tag.innerHTML = post.tags[i];
 						tag.className = "Tag";
+						tag.onclick = function(){
+							var i, j;
+							var focused_post_body = this.parentNode.parentNode.childNodes[1];
+							console.dir(this);
+							console.dir(this.parentNode);
+							console.dir(this.parentNode.parentNode);
+							console.dir(focused_post_body);
+							for(i=0;i<inbox.nPosts;i++){
+								console.log("inbox.posts[i].id : " + inbox.posts[i].id);
+								console.log("focused_post_body.id : " + focused_post_body.id);
+								if(inbox.posts[i].id == focused_post_body.id){
+									break;
+								}
+							}
+							if(!inbox.posts[i].dirty){
+								console.log("making the post dirty")
+								inbox.posts[i].dirty = true;
+								if(inbox.dirty == false) inbox.dirty = true;
+							}
+							console.log("nPosts and i : " + inbox.nPosts + " " + i)
+							for(j=0;j<inbox.posts[i].tags.length;j++){
+								console.log("inbox.posts[i].tags[j] : " + inbox.posts[i].tags[j]);
+								console.log("focused_tag.innerHTML : " + this.innerHTML);
+								if(inbox.posts[i].tags[j] == this.innerHTML){
+									delete inbox.posts[i].tags[j];
+									break;
+								}
+							}
+							console.log("----- tags?");
+							console.log(inbox.posts[i].tags)
+							inbox.posts[i].tags = inbox.posts[i].tags.filter(function(element){
+								return element != null;
+							});
+							console.log(inbox.posts[i].tags)
+							this.parentNode.removeChild(this);
+						}
 						post_header.appendChild(tag);
 					}
 				}
@@ -517,6 +560,42 @@
 				var regexTag = /\#[ㄱ-ㅎ|ㅏ-ㅣ|가-힣|a-z|A-Z|0-9]+/.exec(contents);
 				var regexTagString = regexTag.toString();
 				tag.innerHTML = regexTag;
+				tag.onclick = function(){
+					var i, j;
+					var focused_post_body = this.parentNode.parentNode.childNodes[1];
+					console.dir(this);
+					console.dir(this.parentNode);
+					console.dir(this.parentNode.parentNode);
+					console.dir(focused_post_body);
+					for(i=0;i<inbox.nPosts;i++){
+						console.log("inbox.posts[i].id : " + inbox.posts[i].id);
+						console.log("focused_post_body.id : " + focused_post_body.id);
+						if(inbox.posts[i].id == focused_post_body.id){
+							break;
+						}
+					}
+					if(!inbox.posts[i].dirty){
+						console.log("making the post dirty")
+						inbox.posts[i].dirty = true;
+						if(inbox.dirty == false) inbox.dirty = true;
+					}
+					console.log("nPosts and i : " + inbox.nPosts + " " + i)
+					for(j=0;j<inbox.posts[i].tags.length;j++){
+						console.log("inbox.posts[i].tags[j] : " + inbox.posts[i].tags[j]);
+						console.log("focused_tag.innerHTML : " + this.innerHTML);
+						if(inbox.posts[i].tags[j] == this.innerHTML){
+							delete inbox.posts[i].tags[j];
+							break;
+						}
+					}
+					console.log("----- tags?");
+					console.log(inbox.posts[i].tags)
+					inbox.posts[i].tags = inbox.posts[i].tags.filter(function(element){
+						return element != null;
+					});
+					console.log(inbox.posts[i].tags)
+					this.parentNode.removeChild(this);
+				}
 				textarea.innerHTML = contents.replace(regexTagString, "");
 				// for what?
 				textarea.blur();
