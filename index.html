@@ -94,6 +94,7 @@
                 border: none;
 			    overflow: auto;
 			    outline: none;
+			    font-family : 'Arial';
 			    -webkit-box-shadow: none;
 			    -moz-box-shadow: none;
 			    box-shadow: none;
@@ -243,6 +244,7 @@
 			}
 			/* Tooltip container */
 			.tooltip {
+				font-family: 'Arial';
 			    /* position: relative;
 			    display: inline-block;
 			    border-bottom: 1px dotted black; */ /* If you want dots under the hoverable text */
@@ -402,9 +404,12 @@
 				var rows = document.getElementsByClassName('row');
 				while(rows.length > 0)
 					rows[0].parentNode.removeChild(rows[0]);
-				var i;			
-				for(i=0;i<inbox.nPosts;i++)
-					createPost(inbox.posts[i].getID());
+				var delayMillis = 1000; //1 second
+				setTimeout(function() {
+					var i;			
+					for(i=0;i<inbox.nPosts;i++)
+						createPost(inbox.posts[i].getID());
+				}, delayMillis);
 			};
 			// [TODO] Make sure tag duplicates do not happen in the post + Perform Refactoring to make it simpler and more flexible
 			// When a tag is either created or deleted in the search bar, inbox is updated automatically
@@ -417,21 +422,24 @@
 				var rows = document.getElementsByClassName('row');
 				while(rows.length > 0)
 					rows[0].parentNode.removeChild(rows[0]);
-	
-				var i, j, k, matchCount;
-				for(i=0;i<inbox.nPosts;i++){
-					matchCount = 0;
-					for(j=0;j<inbox.posts[i].tags.length;j++){
-						for(k=0;k<tagsForSearch.length;k++){
-							if(tagsForSearch[k].toString() == inbox.posts[i].tags[j].toString()){
-								matchCount++;
-								break;
+				var delayMillis = 1000; //1 second
+				setTimeout(function() {
+					var i, j, k, matchCount;
+					for(i=0;i<inbox.nPosts;i++){
+						matchCount = 0;
+						for(j=0;j<inbox.posts[i].tags.length;j++){
+							for(k=0;k<tagsForSearch.length;k++){
+								if(tagsForSearch[k].toString() == inbox.posts[i].tags[j].toString()){
+									matchCount++;
+									break;
+								}
 							}
 						}
-					}
-					if(matchCount == tagsForSearch.length)
-						createPost(inbox.posts[i].getID());
-				}				
+						if(matchCount == tagsForSearch.length)
+							createPost(inbox.posts[i].getID());
+					}				
+				}, delayMillis);
+				
 			};
 			// id is set to -1 if the post is created newly
 			function createPost(id = -1, hs = horSize, vs = verSize){
