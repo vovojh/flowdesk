@@ -357,10 +357,17 @@
 				POST : 0,
 				SEARCH : 1
 			};
+			SyncState = {
+				POST : 0,
+				GET : 1
+			}
 			var inputState = InputState.POST; // default
 			var inbox = new Inbox();
 			var searchBarCursorPosition = 0;
 			var tagsForSearch = [];
+			Information = {
+				SERVER_URL : "http://13.58.29.135:8081"
+			};
 			function Post(){
 				this.id = 0; // unique id
 				this.order = 0; // 
@@ -370,6 +377,8 @@
 				this.contents = "";
 				this.creation_date = new Date();
 				this.modification_date = new Date(); 
+				this.dirty = false;
+				this.new = true;
 			}
 			Post.prototype.count = 0;
 			Post.prototype.setID = function(){
@@ -382,42 +391,46 @@
 			function Inbox(){
 				this.nPosts = 0;
 				this.posts = [];
+				this.dirty = false;
 			}
 			Inbox.prototype.addPost = function(newPost){
 				this.nPosts++;
 				this.posts.push(newPost);
 			};
-			Inbox.prototype.showPosts = function(){
-				console.log("# of Posts : " + this.nPosts);
-				console.dir(this.posts);
+			// [TODO] Add parameter about how to sort posts to be displayed
+			Inbox.prototype.showAllPosts = function(){
+				var rows = document.getElementsByClassName('row');
+				while(rows.length > 0)
+					rows[0].parentNode.removeChild(rows[0]);
+				var i;			
+				for(i=0;i<inbox.nPosts;i++)
+					createPost(inbox.posts[i].getID());
 			};
+			// [TODO] Make sure tag duplicates do not happen in the post + Perform Refactoring to make it simpler and more flexible
 			// When a tag is either created or deleted in the search bar, inbox is updated automatically
-			function refreshInboxView(inputState){
+			// Improve Tag-matching Algorithm
+			function refreshInboxView(){
 				if(inputState === InputState.POST) return;
 				// add process bar on the center later
 				
 				//
 				var rows = document.getElementsByClassName('row');
-				while(rows.length > 0){
+				while(rows.length > 0)
 					rows[0].parentNode.removeChild(rows[0]);
-				}
-
-				// var filteredPosts = [];
-				var i, j, k;
+	
+				var i, j, k, matchCount;
 				for(i=0;i<inbox.nPosts;i++){
+					matchCount = 0;
 					for(j=0;j<inbox.posts[i].tags.length;j++){
-						console.log("inbox.posts[" + i + "].tag : " + inbox.posts[i].tags[j]);
-						console.dir(inbox.posts[i].tags[j]);
 						for(k=0;k<tagsForSearch.length;k++){
-							console.log("tagsForSearch : " + tagsForSearch[k]);
-							console.dir(tagsForSearch[k]);
 							if(tagsForSearch[k].toString() == inbox.posts[i].tags[j].toString()){
-								console.log("creating filted Posts..");
-								createPost(inbox.posts[i].getID());
+								matchCount++;
 								break;
 							}
-						}	
+						}
 					}
+					if(matchCount == tagsForSearch.length)
+						createPost(inbox.posts[i].getID());
 				}				
 			};
 			// id is set to -1 if the post is created newly
@@ -440,20 +453,18 @@
 				if(id === -1){ // newly created
 					var newPost = new Post();
 					newPost.setID();
+					//newPost.new = true;
 					post_body.id = newPost.getID(); 
 					inbox.addPost(newPost);
 				} else {
-					console.log("filtered Post : " + id);
 					post_body.id = id;
-					var post, i;
+					var i, post;
 					for(i=0;i<inbox.nPosts;i++){
 						if(inbox.posts[i].id == id) {
 							post = inbox.posts[i];
 							break;
 						}
 					}
-					console.log("deb");
-					console.dir(post);
 					post_body.innerHTML = post.contents;
 					for(i=0;i<post.tags.length;i++){
 						var tag = document.createElement('div');
@@ -462,8 +473,9 @@
 						post_header.appendChild(tag);
 					}
 				}
+				// [TODO] Automatic synchronization is better (like Naver Memo)
 				post_body.onblur = function(){
-					var post, i;
+					var i, post;
 					for(i=0;i<inbox.nPosts;i++){
 						if(inbox.posts[i].id == this.id) {
 							post = inbox.posts[i];
@@ -472,7 +484,6 @@
 					}		
 					post.contents = this.innerHTML; 				
 				}
-				inbox.showPosts(); // DEBUG
 				// dynamic post size
 				post_placeholder.style.width = 400 + 200 * hs + "px";
 				row.style.height = 400 + 200 * vs + "px";
@@ -484,24 +495,22 @@
 				post_wrapper.appendChild(post_body);
 				post_wrapper.appendChild(post_tail);
 			}
-			function createTag(inputState){
+			function createTag(){
 				var tag = document.createElement('div');
 				var textarea = document.activeElement;
-				var post, i;
-				console.dir(inbox);
-				console.dir(textarea);
-				console.log(inbox + " : " + textarea.id);
-				for(i=0;i<inbox.posts.length;i++){
+				var i, post;
+				for(i=0;i<inbox.nPosts;i++){
 					if(inbox.posts[i].id == textarea.id){
 						post = inbox.posts[i];
+						break;
 					}
-				} 
-				var textarea_innerHTML = textarea.innerHTML;
-				var focusedPost = textarea.parentElement.firstChild;
-				var regexTag = /\#[ㄱ-ㅎ|ㅏ-ㅣ|가-힣|a-z|A-Z|0-9]+/.exec(textarea_innerHTML);
+				}
+				var contents = textarea.innerHTML;
+				var tagContainer = textarea.parentElement.firstChild;
+				var regexTag = /\#[ㄱ-ㅎ|ㅏ-ㅣ|가-힣|a-z|A-Z|0-9]+/.exec(contents);
 				var regexTagString = regexTag.toString();
 				tag.innerHTML = regexTag;
-				textarea.innerHTML = textarea_innerHTML.replace(regexTagString, "");
+				textarea.innerHTML = contents.replace(regexTagString, "");
 				// for what?
 				textarea.blur();
 				textarea.focus();
@@ -517,7 +526,62 @@
 					console.dir(post.tags);
 				}
 				console.log("tagsForSearch : " + tagsForSearch);
-				focusedPost.appendChild(tag);
+				tagContainer.appendChild(tag);
+			}
+			// [TODO] update modification date before sending?
+			function syncBtnOnClick(){
+				if(!inbox.dirty && inbox.posts.length != 0) return;
+				var xhttp = new XMLHttpRequest(), state = SyncState.POST;
+				xhttp.onreadystatechange = function(){
+					if(this.readyState == 4 && this.status == 200){
+						switch(state){
+							case SyncState.POST: 	
+								console.log("[LOG] POST request accepted successfully!");
+							  	state = SyncState.GET;
+								inbox.posts = [];
+								xhttp.open("GET", Information.SERVER_URL + "/getposts", true);
+								xhttp.send();
+								break;
+							case SyncState.GET: 
+								console.log("[LOG] GET request accepted successfully!");
+								var i, data = JSON.parse(this.responseText);
+								console.log("Data we got : ")
+								console.dir(data)
+								console.log("---------------")
+								console.log(this.responseText)
+								inbox.nPosts = data.posts.length;
+								inbox.dirty = false;
+								for(i=0; i<inbox.nPosts; i++){
+									var post = new Post();
+									post.id = data.posts[i]._id;
+									post.tags = data.posts[i].tags;
+									post.contents = data.posts[i].contents;
+									post.creation_date = data.posts[i].creation_date;
+									post.modification_date = data.posts[i].modification_date;
+									post.dirty = false;
+									post.new = false;
+									inbox.posts.push(post);
+								}
+								inbox.showAllPosts();								
+								break;
+							default :   			
+								break;  
+						}
+					}
+				};
+				if(inbox.posts.length == 0){
+					state = SyncState.GET;
+					xhttp.open("GET", Information.SERVER_URL + "/getposts", true);
+					xhttp.send();
+				} else {
+					var i, dataToSend = {posts:[]};
+					for(i=0; i<inbox.nPosts; i++)
+						if(inbox.posts[i].dirty)
+							dataToSend.posts.push(inbox.posts[i]);
+					xhttp.open("POST", Information.SERVER_URL + "/syncposts", true);
+					xhttp.setRequestHeader("Content-type", "application/json");
+					xhttp.send(JSON.stringify(dataToSend));
+				}	
 			}
 			function createDefaultBtns(){
 				var newPostBtn = document.createElement('div');
@@ -537,42 +601,12 @@
 				}
 				syncBtn.id = "syncBtn";
 				syncBtn.className = "tooltip";
-				syncBtn.onclick = function(){
-					// AJAX Request to send data to Memo DB
-					// if already synced, do nothing
-					if(false){
-						return;
-					}
-					// sync posts in the view of the inbox only
-					var unSyncedPosts = document.getElementsByClassName("post_body");
-					console.log(unSyncedPosts);
-					console.log(unSyncedPosts[0].innerHTML);
-					var dataToSend = {posts:[]};
-					var i, j;
-					for(i=0; i<unSyncedPosts.length; i++){
-						for(j=0; j<inbox.nPosts; j++){
-							if(unSyncedPosts[i].id == inbox.posts[j].id.toString()) 
-								dataToSend.posts.push(inbox.posts[j]);
-						}	
-					}			
-					console.log("The data to be sent : ");
-					console.dir(dataToSend);
-					var xhttp = new XMLHttpRequest();
-					xhttp.onreadystatechange = function(){
-						if(this.readyState == 4 && this.status == 200){
-							console.log("Sync request accepted successfully!");
-						}						
-					};
-					xhttp.open("POST", "http://13.58.29.135:8081/addposts", true);
-					xhttp.setRequestHeader("Content-type", "application/json");
-					xhttp.send(JSON.stringify(dataToSend));
-					console.log("AJAX Working");
-				}
+				syncBtn.onclick = syncBtnOnClick;
 				searchBtn.id = "searchBtn";
 				searchBtn.className = "tooltip";
 				searchBtn.onclick = function(){
 					inputState = InputState.SEARCH;
-					tagsForSearch = []; // reset
+					tagsForSearch = []; 
 					var searchBarContainer = document.createElement('div');
 					var searchBar = document.createElement('div');
 					var searchTagContainer = document.createElement('div');
@@ -586,7 +620,6 @@
 					closeBtn.id = "closeBtn";
 					closeBtn.onclick = function(){
 						inputState = InputState.POST;
-						//searchBarContainer.innerHTML = "";
 						document.body.removeChild(searchBarContainer);
 					}
 					searchBar.appendChild(searchTagContainer);
@@ -599,74 +632,94 @@
 				resizeHorBtn.id = "resizeHorBtn";
 				resizeHorBtn.className = "tooltip";
 				resizeHorBtn.onclick = function(){
-					var x = document.getElementsByClassName("post_placeholder");
-					var i;
-					var tmp;
-					horSize = horSize + 1;
-					if(horSize > 3){
-						horSize = 0;
-					}
-					for (i = 0; i < x.length; i++) {
-					    x[i].style.width = 400 + 200 * horSize + "px";
-					}
+					var i, rows = document.getElementsByClassName("post_placeholder");
+					horSize = (horSize+1)%4;
+					for (i=0;i<rows.length;i++)
+						rows[i].style.width = 400 + 200 * horSize + "px";
 				}
 				resizeVerBtn.id = "resizeVerBtn";
 				resizeVerBtn.className = "tooltip";
 				resizeVerBtn.onclick = function(){
-					var x = document.getElementsByClassName("row");
-					var i;
-					var tmp;
-					verSize = verSize + 1;
-					if(verSize > 3){
-						verSize = 0;
-					}
-					for (i = 0; i < x.length; i++) {
-					    x[i].style.height = 400 + 200 * verSize + "px";
-					}
+					var i, rows = document.getElementsByClassName("row");
+					verSize = (verSize+1)%4;
+					for (i=0;i<rows.length;i++)
+						rows[i].style.height = 400 + 200 * verSize + "px";
 				}
 				newPostBtnLabel.className = "tooltiptext";
 				newPostBtnLabel.innerHTML = "Create" + "<br />" + "New Post";
-				//newPostBtnLabel.style.right = "112px";
+				newPostBtn.appendChild(newPostBtnLabel);
 				syncBtnLabel.className = "tooltiptext";				
 				syncBtnLabel.innerHTML = "Sync";
+				syncBtn.appendChild(syncBtnLabel);
 				searchBtnLabel.className = "tooltiptext";				
 				searchBtnLabel.innerHTML = "Search" + "<br />" +"by Tags";
+				searchBtn.appendChild(searchBtnLabel);
 				resizeHorBtnLabel.className = "tooltiptext";
 				resizeHorBtnLabel.innerHTML = "Resize " + "<br />" + " horizontally ";
+				resizeHorBtn.appendChild(resizeHorBtnLabel);
 				resizeVerBtnLabel.className = "tooltiptext";
 				resizeVerBtnLabel.innerHTML = "Resize " + "<br />" + " vetically ";
-				//syncBtnLabel.style.right = "22px";
+				resizeVerBtn.appendChild(resizeVerBtnLabel);				
+				
 				document.body.appendChild(newPostBtn);
 				document.body.appendChild(syncBtn);
 				document.body.appendChild(searchBtn);
 				document.body.appendChild(resizeHorBtn);
 				document.body.appendChild(resizeVerBtn);
-				newPostBtn.appendChild(newPostBtnLabel);
-				syncBtn.appendChild(syncBtnLabel);
-				searchBtn.appendChild(searchBtnLabel);
-				resizeHorBtn.appendChild(resizeHorBtnLabel);
-				resizeVerBtn.appendChild(resizeVerBtnLabel);				
 			}
 			function keyManager(e){
 				var code = e.keyCode? e.keyCode : e.which;
 				console.log(code);
-				if(code == 222){	// When " is typed
-					createPost();
-				} else if(code == 51) {	// when "#" key is pressed
-					if(sharpPressed == false) {
-						sharpPressed = true;
-						//preTagContentsLength = document.activeElement.innerHTML.length;
-						//console.log("preTagContentsLength : " + document.activeElement.innerHTML.length);
-					} else {
-						// To 
-					}
-				} else if(code == 32 && sharpPressed == true) { // when "white space" key is pressed
-					sharpPressed = false;
-					createTag(inputState);
-					refreshInboxView(inputState);
-				} else if ((code == 27 || code == 13) && inputState === InputState.SEARCH) {
-					var searchBarContainer = document.getElementById('searchBarContainer');
-					document.body.removeChild(searchBarContainer);
+				switch(inputState){
+					case InputState.POST :
+						if(code == 222){ // When " is typed
+							createPost();
+						} else if(code == 51) {	// when "#" key is pressed
+							if(sharpPressed == false) {
+								sharpPressed = true;
+							} else {
+								// [TODO] Multiple Sharps are not allowed 
+							}
+						} else if((code == 32 || code == 13) && sharpPressed == true) { // when "white space" key is pressed
+							sharpPressed = false;
+							createTag();
+						} else { // any key
+							var focusedTextArea = document.activeElement;
+							console.log("focused text area's id : " + focusedTextArea.id)
+							if(focusedTextArea.contentEditable == "true"){
+								var i;
+								for(i=0;i<inbox.nPosts;i++)
+									if(inbox.posts[i].id == focusedTextArea.id)
+										break;
+								if(!inbox.posts[i].dirty){
+									console.log("making the post dirty")
+									inbox.posts[i].dirty = true;
+									if(inbox.dirty == false) inbox.dirty = true;
+								}
+							}
+						}
+						break;
+					case InputState.SEARCH :
+						if(code == 51) {	// when "#" key is pressed
+							if(sharpPressed == false) {
+								sharpPressed = true;
+							} else {
+								// [TODO] Multiple Sharps are not allowed 
+							}
+						} else if(code == 32 && sharpPressed == true) { // when "white space" key is pressed
+							sharpPressed = false;
+							createTag();
+							refreshInboxView();
+						} else if (code == 27 || code == 13) { // when "enter" key or "esc" key is pressed
+							var searchBarContainer = document.getElementById('searchBarContainer');
+							document.body.removeChild(searchBarContainer);
+							inputState = InputState.POST;
+						} else if (false) { // when tag is deleted or searchBar is just activated
+
+						}
+						break;
+					default :
+						break;
 				}
 			}
 			window.onkeydown = keyManager;
@@ -685,16 +738,5 @@
 		</div>
 	</body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
 
 
