@@ -539,7 +539,6 @@
 					document.body.removeChild(this.parentNode.parentNode.parentNode);
 				}
 				post_modification_date.className = "post_modification_date";
-				console.log("id is " + id);
 				if(id == -1){ // newly created
 					var newPost = new Post();
 					newPost.setID();
@@ -554,7 +553,6 @@
 							break;
 						}
 					}
-					console.dir(post);
 					if(post.to_be_deleted) return ;
 					post_body.innerHTML = post.contents;
 					for(i=0;i<post.tags.length;i++){
@@ -636,16 +634,13 @@
 					this.parentNode.removeChild(this);
 				}
 				textarea.innerHTML = contents.replace(regexTagString, "");
-				// for what?
-				textarea.blur();
-				textarea.focus();
-				if(inputState === InputState.POST) {
-					tag.className = "Tag";
-					post.tags.push(regexTagString);
-				} else if (inputState === InputState.SEARCH) {
+				if (inputState === InputState.SEARCH){
 					tag.className = "SearchTag";
 					tagsForSearch.push(regexTagString);
-				}				
+				} else {
+					tag.className = "Tag";
+					post.tags.push(regexTagString);
+				}
 				tagContainer.appendChild(tag);
 			}
 			// [TODO] update modification date before sending?
