@@ -116,12 +116,35 @@
 				background-image : url("https://s3.us-east-2.amazonaws.com/flowdesk/img/close-icon.png");  
 				background-size: cover;
 				transition : all .1s ease-in-out;
+				z-index: 4;
 			}
 			.close_btn:hover {
 				transform : scale(1.1);
 			}
 			.close_btn:active {
 				transform : scale(0.9);
+			}
+			.post_modification_date {
+				position : absolute;
+				overflow : hidden;
+				bottom : -18px;
+				right : 0px;
+				margin : 5px;
+				padding-left : 5px;
+				padding-right : 5px;
+				display : block;
+				float : right;
+				vertical-align: middle;
+    			text-align: center;
+				background-color : transparent;
+				color : #4286f4;
+				font-family : 'Arial';
+				font-size : 12px;
+				height : 33px;
+				/* 
+				width : 70px;
+				border : 2px solid #6697e8; 
+				*/			
 			}
 			#newPostBtn {
 				position : fixed;
@@ -237,6 +260,7 @@
 				/* width : 70px; */
 				border : 2px solid #6697e8;
 				transition : all .1s ease-in-out; 
+				z-index: 5;
 			}
 			.Tag:hover {
 				transform : scale(1.1);
@@ -379,20 +403,22 @@
 			var horSize = 0;
 			var verSize = 0;
 			InputState = {
-				POST : 0,
-				SEARCH : 1
+				DEFAULT : 0,
+				POST : 1,
+				SEARCH : 2
 			};
 			SyncState = {
 				POST : 0,
 				GET : 1
 			}
-			var inputState = InputState.POST; // default
+			var inputState = InputState.DEFAULT;
 			var inbox = new Inbox();
 			var searchBarCursorPosition = 0;
 			var tagsForSearch = [];
 			Information = {
 				SERVER_URL : "http://13.58.29.135:8081"
 			};
+			var shiftPressed = false;
 			function Post(){
 				this.id = 0; // unique id
 				this.order = 0; // 
@@ -439,10 +465,6 @@
 			// When a tag is either created or deleted in the search bar, inbox is updated automatically
 			// Improve Tag-matching Algorithm
 			function refreshInboxView(){
-				if(inputState === InputState.POST) return;
-				// add process bar on the center later
-				
-				//
 				var rows = document.getElementsByClassName('row');
 				while(rows.length > 0)
 					rows[0].parentNode.removeChild(rows[0]);
@@ -464,9 +486,7 @@
 					}				
 				}, delayMillis);
 			};
-			// id is set to -1 if the post is created newly
 			function createPost(id = -1, hs = horSize, vs = verSize){
-				// create <div> elements
 				var row = document.createElement('div');
 				var post_placeholder = document.createElement('div');
 				var post_wrapper = document.createElement('div');
@@ -474,40 +494,55 @@
 				var post_body = document.createElement('div');
 				var post_tail = document.createElement('div');
 				var close_btn = document.createElement('div');
+				var post_modification_date = document.createElement('div');
 				row.className = "row";
 				post_placeholder.className = "post_placeholder";
 				post_wrapper.className = "post_wrapper";
 				post_header.className = "post_header"; 
 				post_body.className = "post_body";
 				post_body.contentEditable = true;
+				post_body.onclick = function(){
+					this.focus();
+					inputState = InputState.POST;
+					console.log("inputState : POST");
+				}
+				// [TODO] Automatic synchronization is better (like Naver Memo)
+				post_body.onblur = function(){
+					inputState = InputState.DEFAULT;
+					console.log("inputState : DEFAULT");
+					var i, post;
+					for(i=0;i<inbox.nPosts;i++){
+						if(inbox.posts[i].id == this.id) {
+							post = inbox.posts[i];
+							break;
+						}
+					}		
+					post.contents = this.innerHTML;
+					if(post.dirty){ // [TODO] update modification date only after contents got changed
+						post.modification_date = new Date();
+						this.parentNode.childNodes[2].firstChild.innerHTML = post.modification_date;
+					}
+				}
 				post_tail.className = "post_tail";
 				close_btn.className = "close_btn";
 				close_btn.onclick = function(){
 					var i, j;
 					var focused_post_body = this.parentNode.childNodes[1];
-					console.dir(this);
-					console.dir(focused_post_body);
-					for(i=0;i<inbox.nPosts;i++){
-						console.log("inbox.posts[i].id : " + inbox.posts[i].id);
-						console.log("focused_post_body.id : " + focused_post_body.id);
-						if(inbox.posts[i].id == focused_post_body.id){
+					for(i=0;i<inbox.nPosts;i++)
+						if(inbox.posts[i].id == focused_post_body.id)
 							break;
-						}
-					}
 					if(!inbox.posts[i].dirty){
-						console.log("making the post dirty")
 						inbox.posts[i].dirty = true;
 						if(inbox.dirty == false) inbox.dirty = true;
 					}					
-					console.log("nPosts and i : " + inbox.nPosts + " " + i)
 					inbox.posts[i].to_be_deleted = true;
 					document.body.removeChild(this.parentNode.parentNode.parentNode);
 				}
-				// create "Post" object and map it to the <div> element
-				if(id === -1){ // newly created
+				post_modification_date.className = "post_modification_date";
+				console.log("id is " + id);
+				if(id == -1){ // newly created
 					var newPost = new Post();
 					newPost.setID();
-					//newPost.new = true;
 					post_body.id = newPost.getID(); 
 					inbox.addPost(newPost);
 				} else {
@@ -519,7 +554,8 @@
 							break;
 						}
 					}
-					if(post.to_be_deleted) return;
+					console.dir(post);
+					if(post.to_be_deleted) return ;
 					post_body.innerHTML = post.contents;
 					for(i=0;i<post.tags.length;i++){
 						var tag = document.createElement('div');
@@ -528,57 +564,32 @@
 						tag.onclick = function(){
 							var i, j;
 							var focused_post_body = this.parentNode.parentNode.childNodes[1];
-							console.dir(this);
-							console.dir(this.parentNode);
-							console.dir(this.parentNode.parentNode);
-							console.dir(focused_post_body);
-							for(i=0;i<inbox.nPosts;i++){
-								console.log("inbox.posts[i].id : " + inbox.posts[i].id);
-								console.log("focused_post_body.id : " + focused_post_body.id);
-								if(inbox.posts[i].id == focused_post_body.id){
+							for(i=0;i<inbox.nPosts;i++)
+								if(inbox.posts[i].id == focused_post_body.id)
 									break;
-								}
-							}
 							if(!inbox.posts[i].dirty){
-								console.log("making the post dirty")
 								inbox.posts[i].dirty = true;
 								if(inbox.dirty == false) inbox.dirty = true;
 							}
-							console.log("nPosts and i : " + inbox.nPosts + " " + i)
 							for(j=0;j<inbox.posts[i].tags.length;j++){
-								console.log("inbox.posts[i].tags[j] : " + inbox.posts[i].tags[j]);
-								console.log("focused_tag.innerHTML : " + this.innerHTML);
 								if(inbox.posts[i].tags[j] == this.innerHTML){
 									delete inbox.posts[i].tags[j];
 									break;
 								}
 							}
-							console.log("----- tags?");
-							console.log(inbox.posts[i].tags)
 							inbox.posts[i].tags = inbox.posts[i].tags.filter(function(element){
 								return element != null;
 							});
-							console.log(inbox.posts[i].tags)
 							this.parentNode.removeChild(this);
 						}
 						post_header.appendChild(tag);
 					}
-				}
-				// [TODO] Automatic synchronization is better (like Naver Memo)
-				post_body.onblur = function(){
-					var i, post;
-					for(i=0;i<inbox.nPosts;i++){
-						if(inbox.posts[i].id == this.id) {
-							post = inbox.posts[i];
-							break;
-						}
-					}		
-					post.contents = this.innerHTML; 				
+					post_modification_date.innerHTML = post.modification_date;
 				}
 				// dynamic post size
 				post_placeholder.style.width = 400 + 200 * hs + "px";
 				row.style.height = 400 + 200 * vs + "px";
-				// stack up <div> elements
+
 				document.body.appendChild(row);
 				row.appendChild(post_placeholder);
 				post_placeholder.appendChild(post_wrapper);
@@ -586,6 +597,7 @@
 				post_wrapper.appendChild(post_body);
 				post_wrapper.appendChild(post_tail);
 				post_wrapper.appendChild(close_btn);
+				post_tail.appendChild(post_modification_date);
 			}
 			function createTag(){
 				var tag = document.createElement('div');
@@ -605,37 +617,22 @@
 				tag.onclick = function(){
 					var i, j;
 					var focused_post_body = this.parentNode.parentNode.childNodes[1];
-					console.dir(this);
-					console.dir(this.parentNode);
-					console.dir(this.parentNode.parentNode);
-					console.dir(focused_post_body);
-					for(i=0;i<inbox.nPosts;i++){
-						console.log("inbox.posts[i].id : " + inbox.posts[i].id);
-						console.log("focused_post_body.id : " + focused_post_body.id);
-						if(inbox.posts[i].id == focused_post_body.id){
+					for(i=0;i<inbox.nPosts;i++)
+						if(inbox.posts[i].id == focused_post_body.id)
 							break;
-						}
-					}
 					if(!inbox.posts[i].dirty){
-						console.log("making the post dirty")
 						inbox.posts[i].dirty = true;
 						if(inbox.dirty == false) inbox.dirty = true;
 					}
-					console.log("nPosts and i : " + inbox.nPosts + " " + i)
 					for(j=0;j<inbox.posts[i].tags.length;j++){
-						console.log("inbox.posts[i].tags[j] : " + inbox.posts[i].tags[j]);
-						console.log("focused_tag.innerHTML : " + this.innerHTML);
 						if(inbox.posts[i].tags[j] == this.innerHTML){
 							delete inbox.posts[i].tags[j];
 							break;
 						}
 					}
-					console.log("----- tags?");
-					console.log(inbox.posts[i].tags)
 					inbox.posts[i].tags = inbox.posts[i].tags.filter(function(element){
 						return element != null;
 					});
-					console.log(inbox.posts[i].tags)
 					this.parentNode.removeChild(this);
 				}
 				textarea.innerHTML = contents.replace(regexTagString, "");
@@ -645,15 +642,10 @@
 				if(inputState === InputState.POST) {
 					tag.className = "Tag";
 					post.tags.push(regexTagString);
-				} else {
+				} else if (inputState === InputState.SEARCH) {
 					tag.className = "SearchTag";
 					tagsForSearch.push(regexTagString);
 				}				
-				if(post !== undefined) {
-					console.log("tags in the post : ");
-					console.dir(post.tags);
-				}
-				console.log("tagsForSearch : " + tagsForSearch);
 				tagContainer.appendChild(tag);
 			}
 			// [TODO] update modification date before sending?
@@ -732,47 +724,13 @@
 				syncBtn.onclick = syncBtnOnClick;
 				searchBtn.id = "searchBtn";
 				searchBtn.className = "tooltip";
-				searchBtn.onclick = function(){
-					inputState = InputState.SEARCH;
-					tagsForSearch = []; 
-					var searchBarContainer = document.createElement('div');
-					var searchBar = document.createElement('div');
-					var searchTagContainer = document.createElement('div');
-					var searchTextField = document.createElement('div');
-					var closeBtn = document.createElement('div');
-					searchBarContainer.id = "searchBarContainer";
-					searchBar.id = "searchBar";
-					searchTagContainer.id = "searchTagContainer";
-					searchTextField.id = "searchTextField";
-					searchTextField.contentEditable = true;
-					closeBtn.id = "closeBtn";
-					closeBtn.onclick = function(){
-						inputState = InputState.POST;
-						document.body.removeChild(searchBarContainer);
-					}
-					searchBar.appendChild(searchTagContainer);
-					searchBar.appendChild(searchTextField);
-					searchBar.appendChild(closeBtn);
-					searchBarContainer.appendChild(searchBar);
-					document.body.appendChild(searchBarContainer);
-					searchTextField.focus();
-				}
+				searchBtn.onclick = searchBtnOnClick; 
 				resizeHorBtn.id = "resizeHorBtn";
 				resizeHorBtn.className = "tooltip";
-				resizeHorBtn.onclick = function(){
-					var i, rows = document.getElementsByClassName("post_placeholder");
-					horSize = (horSize+1)%4;
-					for (i=0;i<rows.length;i++)
-						rows[i].style.width = 400 + 200 * horSize + "px";
-				}
+				resizeHorBtn.onclick = resizeHor;
 				resizeVerBtn.id = "resizeVerBtn";
 				resizeVerBtn.className = "tooltip";
-				resizeVerBtn.onclick = function(){
-					var i, rows = document.getElementsByClassName("row");
-					verSize = (verSize+1)%4;
-					for (i=0;i<rows.length;i++)
-						rows[i].style.height = 400 + 200 * verSize + "px";
-				}
+				resizeVerBtn.onclick = resizeVer; 
 				newPostBtnLabel.className = "tooltiptext";
 				newPostBtnLabel.innerHTML = "Create" + "<br />" + "New Post";
 				newPostBtn.appendChild(newPostBtnLabel);
@@ -795,32 +753,59 @@
 				document.body.appendChild(resizeHorBtn);
 				document.body.appendChild(resizeVerBtn);
 			}
-			function keyManager(e){
+			function keyDownManager(e){
 				var code = e.keyCode? e.keyCode : e.which;
 				console.log(code);
 				switch(inputState){
-					case InputState.POST :
-						if(code == 222){ // When " is typed
-							createPost();
-						} else if(code == 51) {	// when "#" key is pressed
-							if(sharpPressed == false) {
-								sharpPressed = true;
-							} else {
-								// [TODO] Multiple Sharps are not allowed 
+					case InputState.DEFAULT :
+						if(shiftPressed){
+							switch(code){
+								case 37 : // Left Arrow
+									resizeHor(-1);
+									break;
+								case 38 : // Up Arrow
+									resizeVer(-1);
+									break;
+								case 39 : // Right Arrow
+									resizeHor(1);
+									break;
+								case 40 : // Down Arrow
+									resizeVer(1);
+									break;
+								case 83 : // "s" key 
+									searchBtnOnClick();
+									break;
+								case 78 : // "n" key 
+									createPost();
+									break;
+								case 222 :// "'" key
+									syncBtnOnClick();
+									break;
+								default :
+									break;
 							}
-						} else if((code == 32 || code == 13) && sharpPressed == true) { // when "white space" key is pressed
+						} else if (code == 16) {
+							shiftPressed = true;
+						}
+						break;
+					case InputState.POST :
+						if(code == 51) {	// when "#" key is pressed
+							if(sharpPressed == false) sharpPressed = true;
+							else ; // [TODO] Multiple Sharps are not allowed 	
+						} else if((code == 32 || code == 13) && sharpPressed) { // when "white space" key is pressed
 							sharpPressed = false;
 							createTag();
-						} else { // any key
+						} else if(code == 27) { // when "esc" key is pressed
+							document.activeElement.blur();
+							inputState = InputState.DEFAULT;
+						} else { // any other keys
 							var focusedTextArea = document.activeElement;
-							console.log("focused text area's id : " + focusedTextArea.id)
 							if(focusedTextArea.contentEditable == "true"){
 								var i;
 								for(i=0;i<inbox.nPosts;i++)
 									if(inbox.posts[i].id == focusedTextArea.id)
 										break;
 								if(!inbox.posts[i].dirty){
-									console.log("making the post dirty")
 									inbox.posts[i].dirty = true;
 									if(inbox.dirty == false) inbox.dirty = true;
 								}
@@ -829,28 +814,77 @@
 						break;
 					case InputState.SEARCH :
 						if(code == 51) {	// when "#" key is pressed
-							if(sharpPressed == false) {
-								sharpPressed = true;
-							} else {
-								// [TODO] Multiple Sharps are not allowed 
-							}
+							if(sharpPressed == false) sharpPressed = true;
+							else ; // [TODO] Multiple Sharps are not allowed 
 						} else if(code == 32 && sharpPressed == true) { // when "white space" key is pressed
 							sharpPressed = false;
 							createTag();
 							refreshInboxView();
-						} else if (code == 27 || code == 13) { // when "enter" key or "esc" key is pressed
-							var searchBarContainer = document.getElementById('searchBarContainer');
-							document.body.removeChild(searchBarContainer);
-							inputState = InputState.POST;
+						} else if (code == 27 || code == 13) { // when "esc" key or "enter" key is pressed
+							document.body.removeChild(document.getElementById('searchBarContainer'));
+							inputState = InputState.DEFAULT;
 						} else if (false) { // when tag is deleted or searchBar is just activated
-
+							;
 						}
 						break;
 					default :
 						break;
 				}
 			}
-			window.onkeydown = keyManager;
+			function resizeHor(val = 1){
+				var i, rows = document.getElementsByClassName("post_placeholder");
+				if(val > 0) horSize = (horSize+1)%4;
+				else horSize = (horSize-1 == -1)? 4:horSize-1; 
+				for (i=0;i<rows.length;i++)
+					rows[i].style.width = 400 + 200 * horSize + "px";
+			}
+			function resizeVer(val = 1){
+				var i, rows = document.getElementsByClassName("row");
+				if(val > 0) verSize = (verSize+1)%4;
+				else verSize = (verSize-1 == -1)? 4:verSize-1; 
+				for (i=0;i<rows.length;i++)
+					rows[i].style.height = 400 + 200 * verSize + "px";
+			}
+			function keyPressManager(e){
+				var code = e.keyCode? e.keyCode : e.which;
+				console.log("key press event : " + code);
+			}
+			function keyUpManager(e){
+				var code = e.keyCode? e.keyCode : e.which;
+				console.log("key up event : " + code);
+				if(code == 16){ // when key up on "shift" key
+					console.log("shift key up");
+					shiftPressed = false;
+				}
+			}
+			function searchBtnOnClick(){
+				inputState = InputState.SEARCH;
+				tagsForSearch = []; 
+				var searchBarContainer = document.createElement('div');
+				var searchBar = document.createElement('div');
+				var searchTagContainer = document.createElement('div');
+				var searchTextField = document.createElement('div');
+				var closeBtn = document.createElement('div');
+				searchBarContainer.id = "searchBarContainer";
+				searchBar.id = "searchBar";
+				searchTagContainer.id = "searchTagContainer";
+				searchTextField.id = "searchTextField";
+				searchTextField.contentEditable = true;
+				closeBtn.id = "closeBtn";
+				closeBtn.onclick = function(){
+					inputState = InputState.DEFAULT;
+					document.body.removeChild(searchBarContainer);
+				}
+				searchBar.appendChild(searchTagContainer);
+				searchBar.appendChild(searchTextField);
+				searchBar.appendChild(closeBtn);
+				searchBarContainer.appendChild(searchBar);
+				document.body.appendChild(searchBarContainer);
+				searchTextField.focus();
+			}
+			window.onkeypress = keyPressManager;
+			window.onkeyup = keyUpManager;
+			window.onkeydown = keyDownManager;
 			window.onload = function(){
 				createDefaultBtns();
 			}
@@ -866,5 +900,3 @@
 		</div>
 	</body>
 </html>
-
-
