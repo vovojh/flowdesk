@@ -81,7 +81,7 @@
 				overflow : hidden;
                 background-color : white;
                 margin : 0 auto;
-                width : 100%;
+                width : 87%;
                 height : 15%;
 			}
 			.post_body {
@@ -106,6 +106,22 @@
                 margin : 0 auto;
                 width : 100%;
                 height : 15%;
+			}
+			.close_btn {
+				position : absolute;
+				top : 15px;
+				right : 15px;
+				width : 25px;
+				height : 25px;
+				background-image : url("https://s3.us-east-2.amazonaws.com/flowdesk/img/close-icon.png");  
+				background-size: cover;
+				transition : all .1s ease-in-out;
+			}
+			.close_btn:hover {
+				transform : scale(1.1);
+			}
+			.close_btn:active {
+				transform : scale(0.9);
 			}
 			#newPostBtn {
 				position : fixed;
@@ -388,6 +404,7 @@
 				this.modification_date = new Date(); 
 				this.dirty = false;
 				this.new = true;
+				this.to_be_deleted = false;
 			}
 			Post.prototype.count = 0;
 			Post.prototype.setID = function(){
@@ -456,6 +473,7 @@
 				var post_header = document.createElement('div');
 				var post_body = document.createElement('div');
 				var post_tail = document.createElement('div');
+				var close_btn = document.createElement('div');
 				row.className = "row";
 				post_placeholder.className = "post_placeholder";
 				post_wrapper.className = "post_wrapper";
@@ -463,6 +481,28 @@
 				post_body.className = "post_body";
 				post_body.contentEditable = true;
 				post_tail.className = "post_tail";
+				close_btn.className = "close_btn";
+				close_btn.onclick = function(){
+					var i, j;
+					var focused_post_body = this.parentNode.childNodes[1];
+					console.dir(this);
+					console.dir(focused_post_body);
+					for(i=0;i<inbox.nPosts;i++){
+						console.log("inbox.posts[i].id : " + inbox.posts[i].id);
+						console.log("focused_post_body.id : " + focused_post_body.id);
+						if(inbox.posts[i].id == focused_post_body.id){
+							break;
+						}
+					}
+					if(!inbox.posts[i].dirty){
+						console.log("making the post dirty")
+						inbox.posts[i].dirty = true;
+						if(inbox.dirty == false) inbox.dirty = true;
+					}					
+					console.log("nPosts and i : " + inbox.nPosts + " " + i)
+					inbox.posts[i].to_be_deleted = true;
+					document.body.removeChild(this.parentNode.parentNode.parentNode);
+				}
 				// create "Post" object and map it to the <div> element
 				if(id === -1){ // newly created
 					var newPost = new Post();
@@ -479,6 +519,7 @@
 							break;
 						}
 					}
+					if(post.to_be_deleted) return;
 					post_body.innerHTML = post.contents;
 					for(i=0;i<post.tags.length;i++){
 						var tag = document.createElement('div');
@@ -544,6 +585,7 @@
 				post_wrapper.appendChild(post_header);
 				post_wrapper.appendChild(post_body);
 				post_wrapper.appendChild(post_tail);
+				post_wrapper.appendChild(close_btn);
 			}
 			function createTag(){
 				var tag = document.createElement('div');

@@ -23,7 +23,8 @@ updateEachPost.on('nextUpdate', function(db, idx, modifiedPosts, resp){
 						$set:   {
 									tags : modifiedPosts[idx].tags, 
 									contents: modifiedPosts[idx].contents, 
-									modification_date: modifiedPosts[idx].modification_date
+									modification_date: modifiedPosts[idx].modification_date,
+									to_be_deleted : modifiedPosts[idx].to_be_deleted
 								} 
 					}
 	db.collection("posts").updateOne(query, newValues, function(err, res){
@@ -35,12 +36,19 @@ updateEachPost.on('nextUpdate', function(db, idx, modifiedPosts, resp){
 			updateEachPost.emit('nextUpdate', db, idx+1, modifiedPosts, resp)
 		} else {
 			console.log("finishing update chaining..")
-			resp.writeHead(200, {'Content-Type': 'text/html'})
-			resp.end()
-			db.close()
+			console.log("remove posts before closing db")
+			var queryForDelete = { to_be_deleted : true }
+			db.collection("posts").deleteMany(queryForDelete, function(err, obj) {
+			    if (err) throw err;
+			    resp.writeHead(200, {'Content-Type': 'text/html'})
+				resp.end()
+			    console.log(obj.result.n + " document(s) deleted");
+			    db.close();
+			});
 		}
 	})	
 })
+
 const mongodbUrl = 'mongodb://localhost:27017/flowdesk'
 const app = express()
 
