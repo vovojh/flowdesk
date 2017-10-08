@@ -419,6 +419,7 @@
 				SERVER_URL : "http://13.58.29.135:8081"
 			};
 			var shiftPressed = false;
+			var currentPost = null;
 			function Post(){
 				this.id = 0; // unique id
 				this.order = 0; // 
@@ -454,7 +455,7 @@
 				var rows = document.getElementsByClassName('row');
 				while(rows.length > 0)
 					rows[0].parentNode.removeChild(rows[0]);
-				var delayMillis = 1000; //1 second
+				var delayMillis = 100; //1 second
 				setTimeout(function() {
 					var i;			
 					for(i=0;i<inbox.nPosts;i++)
@@ -468,22 +469,27 @@
 				var rows = document.getElementsByClassName('row');
 				while(rows.length > 0)
 					rows[0].parentNode.removeChild(rows[0]);
-				var delayMillis = 1000; //1 second
+				var delayMillis = 100; //1 second
 				setTimeout(function() {
 					var i, j, k, matchCount;
-					for(i=0;i<inbox.nPosts;i++){
-						matchCount = 0;
-						for(j=0;j<inbox.posts[i].tags.length;j++){
-							for(k=0;k<tagsForSearch.length;k++){
-								if(tagsForSearch[k].toString() == inbox.posts[i].tags[j].toString()){
-									matchCount++;
-									break;
+					if(tagsForSearch.length == 0){
+						for(i=0;i<inbox.nPosts;i++)
+							createPost(inbox.posts[i].getID());
+					} else {
+						for(i=0;i<inbox.nPosts;i++){
+							matchCount = 0;
+							for(j=0;j<inbox.posts[i].tags.length;j++){
+								for(k=0;k<tagsForSearch.length;k++){
+									if(tagsForSearch[k].toString() == inbox.posts[i].tags[j].toString()){
+										matchCount++;
+										break;
+									}
 								}
 							}
-						}
-						if(matchCount == tagsForSearch.length)
-							createPost(inbox.posts[i].getID());
-					}				
+							if(matchCount == tagsForSearch.length)
+								createPost(inbox.posts[i].getID());
+						}	
+					}			
 				}, delayMillis);
 			};
 			function createPost(id = -1, hs = horSize, vs = verSize){
@@ -522,6 +528,12 @@
 						post.modification_date = new Date();
 						this.parentNode.childNodes[2].firstChild.innerHTML = post.modification_date;
 					}
+					this.parentNode.style["boxShadow"] = "";
+				}
+				post_body.onfocus = function(){
+					inputState = InputState.POST;
+					console.log("inputState : POST");
+					this.parentNode.style["boxShadow"] = "0 0 8px #8ce6ff";
 				}
 				post_tail.className = "post_tail";
 				close_btn.className = "close_btn";
@@ -609,7 +621,8 @@
 				}
 				var contents = textarea.innerHTML;
 				var tagContainer = textarea.parentElement.firstChild;
-				var regexTag = /\#[ㄱ-ㅎ|ㅏ-ㅣ|가-힣|a-z|A-Z|0-9]+/.exec(contents);
+				var regexTag = /\#[ㄱ-ㅎ|ㅏ-ㅣ|가-힣|a-z|A-Z|0-9|\s|\n]+/.exec(contents);
+				if(regexTag === null) return;
 				var regexTagString = regexTag.toString();
 				tag.innerHTML = regexTag;
 				tag.onclick = function(){
@@ -641,11 +654,15 @@
 					tag.className = "Tag";
 					post.tags.push(regexTagString);
 				}
+				console.log("text length : " + textarea.innerHTML.toString().length)
+				textarea.selectionStart = textarea.selectionStart + textarea.innerHTML.toString().length;
+				textarea.selectionEnd = textarea.selectionStart + textarea.innerHTML.toString().length;
 				tagContainer.appendChild(tag);
 			}
 			// [TODO] update modification date before sending?
 			function syncBtnOnClick(){
 				if(!inbox.dirty && inbox.posts.length != 0) return;
+				currentPost = null;
 				var xhttp = new XMLHttpRequest(), state = SyncState.POST;
 				xhttp.onreadystatechange = function(){
 					if(this.readyState == 4 && this.status == 200){
@@ -753,8 +770,8 @@
 				console.log(code);
 				switch(inputState){
 					case InputState.DEFAULT :
-						if(shiftPressed){
-							switch(code){
+						if(shiftPressed){ // shortcuts for buttons
+							switch(code){ 
 								case 37 : // Left Arrow
 									resizeHor(-1);
 									break;
@@ -781,6 +798,27 @@
 							}
 						} else if (code == 16) {
 							shiftPressed = true;
+						} else if (code >= 37 && code <= 40){ // post selection by arrow keys + 
+							switch(code){
+								case 37 : // Left Arrow
+									//
+									break;
+								case 38 : // Up Arrow
+									focusPost(1);
+									break;
+								case 39 : // Right Arrow
+									// 
+									break;
+								case 40 : // Down Arrow
+									focusPost(-1);
+									break;
+								default :
+									break;
+							}	
+						} else { // any key makes the post-body focused
+							if(currentPost !== null){
+								currentPost.focus();
+							}
 						}
 						break;
 					case InputState.POST :
@@ -814,9 +852,10 @@
 						} else if(code == 32 && sharpPressed == true) { // when "white space" key is pressed
 							sharpPressed = false;
 							createTag();
-							refreshInboxView();
+							//refreshInboxView();
 						} else if (code == 27 || code == 13) { // when "esc" key or "enter" key is pressed
 							document.body.removeChild(document.getElementById('searchBarContainer'));
+							refreshInboxView();
 							inputState = InputState.DEFAULT;
 						} else if (false) { // when tag is deleted or searchBar is just activated
 							;
@@ -876,6 +915,35 @@
 				searchBarContainer.appendChild(searchBar);
 				document.body.appendChild(searchBarContainer);
 				searchTextField.focus();
+			}
+			function focusPost(val){
+				if(currentPost == null) {
+					var rows = document.getElementsByClassName("row");
+					console.dir(rows);
+					if(rows.length != 0){
+						currentPost = rows[0].firstChild.firstChild.childNodes[1];
+						document.getElementById(currentPost.id).scrollIntoView({behavior: "instant", block: "center", inline: "center"});
+						currentPost.parentNode.style["boxShadow"] = "0 0 8px #8ce6ff";
+					} 
+					return ;
+				} 
+				if(val > 0){ // Go to Upper Post
+					if(typeof currentPost.parentNode.parentNode.parentNode.previousSibling !== 'undefined' && currentPost.parentNode.parentNode.parentNode.previousSibling != null && currentPost.parentNode.parentNode.parentNode.previousSibling.className == 'row'){
+						console.log("currentPost's id : " + currentPost.id);
+						currentPost.parentNode.style["boxShadow"] = "";
+						currentPost = currentPost.parentNode.parentNode.parentNode.previousSibling.firstChild.firstChild.childNodes[1];
+						document.getElementById(currentPost.id).scrollIntoView({behavior: "instant", block: "center", inline: "center"});
+						currentPost.parentNode.style["boxShadow"] = "0 0 8px #8ce6ff";
+					}
+				} else { // Go to Lower Post
+					if(typeof currentPost.parentNode.parentNode.parentNode.nextSibling !== 'undefined' && currentPost.parentNode.parentNode.parentNode.nextSibling != null && currentPost.parentNode.parentNode.parentNode.nextSibling.className == 'row'){
+						console.log("currentPost's id : " + currentPost.id);
+						currentPost.parentNode.style["boxShadow"] = "";
+						currentPost = currentPost.parentNode.parentNode.parentNode.nextSibling.firstChild.firstChild.childNodes[1];
+						document.getElementById(currentPost.id).scrollIntoView({behavior: "instant", block: "center", inline: "center"});
+						currentPost.parentNode.style["boxShadow"] = "0 0 8px #8ce6ff";
+					}
+				}	
 			}
 			window.onkeypress = keyPressManager;
 			window.onkeyup = keyUpManager;
